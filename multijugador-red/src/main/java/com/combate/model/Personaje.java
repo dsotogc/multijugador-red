@@ -35,7 +35,7 @@ public abstract class Personaje {
 	 * Comprueba si el personaje está vivo
 	 * @return true si su vida actual es mayor que 0, false en caso contrario
 	 */
-	protected boolean isAlive()
+	public boolean isAlive()
 	{
 		return this.current_health > 0;
 	}
