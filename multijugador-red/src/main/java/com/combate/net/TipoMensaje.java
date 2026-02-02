@@ -30,6 +30,7 @@ public enum TipoMensaje
     // Mensajes Servidor - Cliente
     CONFIRMACION_CONEXION,
     ESPERA,
+	TODOS_CONECTADOS,
     INICIO_PARTIDA,
     ESTADO_PARTIDA,
     TURNO,
