@@ -5,7 +5,7 @@ import java.awt.*;
 import com.combate.client.ClienteUDP;
 
 /**
- * Panel de combate mejorado con acciones específicas por clase y validación de objetivos.
+ * Panel de combate con soporte para ataque en área del mago.
  * 
  * @author David Soto García
  */
@@ -32,6 +32,7 @@ public class PanelCombate extends JPanel
     private JPanel panel_habilidades;
     
     private int accion_seleccionada = -1;
+    private boolean es_ataque_area = false;
     
     public PanelCombate(VentanaJuego ventana, ClienteUDP cliente) 
     {
@@ -221,22 +222,49 @@ public class PanelCombate extends JPanel
         btn_accion2.setEnabled(false);
         btn_accion3.setEnabled(false);
         
-        int[] objetivos_validos = obtenerObjetivosValidos(accion);
+        es_ataque_area = (mi_clase.equals("Mago") && accion == 3);
         
-        for (int i = 0; i < 4; i++) 
+        if (es_ataque_area) 
         {
-            botones_objetivo[i].setEnabled(false);
-        }
-        
-        for (int idx : objetivos_validos) 
+            ejecutarAtaqueArea();
+        } 
+        else 
         {
-            if (idx >= 0 && idx < 4) 
+            int[] objetivos_validos = obtenerObjetivosValidos(accion);
+            
+            for (int i = 0; i < 4; i++) 
             {
-                botones_objetivo[idx].setEnabled(true);
+                botones_objetivo[i].setEnabled(false);
             }
+            
+            for (int idx : objetivos_validos) 
+            {
+                if (idx >= 0 && idx < 4) 
+                {
+                    botones_objetivo[idx].setEnabled(true);
+                }
+            }
+            
+            agregarLog("Selecciona objetivo para tu habilidad");
         }
+    }
+    
+    private void ejecutarAtaqueArea() 
+    {
+        int enemigo1 = (mi_equipo == 1) ? 2 : 0;
+        int enemigo2 = (mi_equipo == 1) ? 3 : 1;
         
-        agregarLog("Selecciona objetivo para tu habilidad");
+        try 
+        {
+            cliente.enviarAccion(accion_seleccionada, enemigo1, enemigo2);
+            agregarLog("Ataque en área ejecutado contra ambos enemigos");
+            accion_seleccionada = -1;
+            es_ataque_area = false;
+        } 
+        catch (Exception e) 
+        {
+            e.printStackTrace();
+        }
     }
     
     private int[] obtenerObjetivosValidos(int accion) 
@@ -259,10 +287,6 @@ public class PanelCombate extends JPanel
         else if (mi_clase.equals("Mago")) 
         {
             if (accion == 1 || accion == 2) 
-            {
-                return new int[]{enemigo1, enemigo2};
-            } 
-            else if (accion == 3) 
             {
                 return new int[]{enemigo1, enemigo2};
             }
