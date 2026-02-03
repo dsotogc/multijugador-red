@@ -16,6 +16,7 @@ public class VentanaJuego extends JFrame
     
     private PanelSeleccionClase panel_seleccion;
     private PanelCombate panel_combate;
+    private PanelVictoria panel_victoria;
     
     private ClienteUDP cliente;
     
@@ -34,9 +35,11 @@ public class VentanaJuego extends JFrame
         
         panel_seleccion = new PanelSeleccionClase(this, cliente);
         panel_combate = new PanelCombate(this, cliente);
+        panel_victoria = new PanelVictoria(this);
         
         panel_contenedor.add(panel_seleccion, "SELECCION");
         panel_contenedor.add(panel_combate, "COMBATE");
+        panel_contenedor.add(panel_victoria, "VICTORIA");
         
         add(panel_contenedor);
         
@@ -52,6 +55,12 @@ public class VentanaJuego extends JFrame
     public void mostrarCombate() 
     {
         card_layout.show(panel_contenedor, "COMBATE");
+    }
+    
+    public void mostrarVictoria(int equipo_ganador, boolean es_mi_equipo) 
+    {
+        panel_victoria.mostrarResultado(equipo_ganador, es_mi_equipo);
+        card_layout.show(panel_contenedor, "VICTORIA");
     }
     
     public PanelCombate getPanelCombate() 

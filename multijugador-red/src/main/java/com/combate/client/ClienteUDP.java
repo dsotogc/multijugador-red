@@ -109,8 +109,22 @@ public class ClienteUDP
                 break;
                 
             case FIN_PARTIDA:
-                ventana.getPanelCombate().agregarLog("=== " + msg.getDatos() + " ===");
-                ventana.getPanelCombate().finalizarPartida(msg.getDatos());
+                int equipo_ganador = Integer.parseInt(msg.getDatos().split(" ")[2]);
+                boolean es_mi_equipo = (equipo_ganador == mi_equipo);
+                
+                ventana.getPanelCombate().agregarLog("=== FIN DE LA PARTIDA ===");
+                ventana.getPanelCombate().finalizarPartida("Ganó Equipo " + equipo_ganador);
+                
+                try 
+                {
+                    Thread.sleep(2000);
+                } 
+                catch (InterruptedException e) 
+                {
+                    e.printStackTrace();
+                }
+                
+                ventana.mostrarVictoria(equipo_ganador, es_mi_equipo);
                 break;
                 
             case ERROR:
