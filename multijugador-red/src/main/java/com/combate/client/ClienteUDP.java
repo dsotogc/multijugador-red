@@ -8,7 +8,6 @@ import com.combate.view.VentanaJuego;
 
 /**
  * Cliente UDP con interfaz gráfica para el juego de combate por turnos.
- * Se conecta al servidor, gestiona la comunicación y actualiza la UI.
  * 
  * @author David Soto García
  */
@@ -20,18 +19,11 @@ public class ClienteUDP
     
     private int mi_numero;
     private int mi_equipo;
+    private String mi_clase;
     
     private VentanaJuego ventana;
     private Thread hilo_receptor;
     
-    private int accion_seleccionada = -1;
-    private int objetivo1 = -1;
-    private int objetivo2 = -1;
-    private boolean esperando_accion = false;
-    
-    /**
-     * Constructor del cliente
-     */
     public ClienteUDP() throws SocketException, UnknownHostException 
     {
         socket = new DatagramSocket();
@@ -42,9 +34,6 @@ public class ClienteUDP
         iniciarHiloReceptor();
     }
     
-    /**
-     * Inicia un hilo para recibir mensajes del servidor continuamente
-     */
     private void iniciarHiloReceptor() 
     {
         hilo_receptor = new Thread(() -> {
@@ -67,27 +56,18 @@ public class ClienteUDP
         hilo_receptor.start();
     }
     
-    /**
-     * Conecta con el servidor y envía mensaje de conexión
-     */
     public void conectar() throws IOException 
     {
         Mensaje msg = new Mensaje(TipoMensaje.CONEXION);
         enviar(msg);
     }
     
-    /**
-     * Envía la clase seleccionada al servidor
-     */
     public void enviarClase(String clase) throws IOException 
     {
         Mensaje msg = new Mensaje(TipoMensaje.SELECCION_CLASE, clase);
         enviar(msg);
     }
     
-    /**
-     * Envía una acción al servidor
-     */
     public void enviarAccion(int accion, int obj1, int obj2) throws IOException 
     {
         String datos = accion + "|" + obj1 + "|" + obj2;
@@ -95,9 +75,6 @@ public class ClienteUDP
         enviar(msg);
     }
     
-    /**
-     * Procesa los mensajes recibidos del servidor
-     */
     private void procesarMensaje(Mensaje msg) 
     {
         switch (msg.getTipo()) 
@@ -119,6 +96,7 @@ public class ClienteUDP
                 
             case INICIO_PARTIDA:
                 ventana.mostrarCombate();
+                ventana.getPanelCombate().configurarJuego(mi_numero, mi_equipo, mi_clase);
                 ventana.getPanelCombate().agregarLog("=== PARTIDA INICIADA ===");
                 break;
                 
@@ -127,15 +105,12 @@ public class ClienteUDP
                 break;
                 
             case TURNO:
-                ventana.getPanelCombate().actualizarTurno("*** ES TU TURNO ***");
-                ventana.getPanelCombate().habilitarAcciones(true);
-                esperando_accion = true;
+                ventana.getPanelCombate().activarTurno();
                 break;
                 
             case FIN_PARTIDA:
                 ventana.getPanelCombate().agregarLog("=== " + msg.getDatos() + " ===");
-                ventana.getPanelCombate().actualizarTurno(msg.getDatos());
-                ventana.getPanelCombate().habilitarAcciones(false);
+                ventana.getPanelCombate().finalizarPartida(msg.getDatos());
                 break;
                 
             case ERROR:
@@ -144,10 +119,6 @@ public class ClienteUDP
         }
     }
     
-    /**
-     * Actualiza el estado de la partida en la interfaz
-     * Formato: "vida0|vida1|vida2|vida3|turno|estado"
-     */
     private void actualizarEstado(String datos) 
     {
         String[] partes = datos.split("\\|");
@@ -159,16 +130,9 @@ public class ClienteUDP
         }
         
         int turno = Integer.parseInt(partes[4]);
-        if (turno != mi_numero) 
-        {
-            ventana.getPanelCombate().actualizarTurno("Turno del Jugador " + turno);
-            ventana.getPanelCombate().habilitarAcciones(false);
-        }
+        ventana.getPanelCombate().actualizarTurno(turno);
     }
     
-    /**
-     * Envía un mensaje al servidor
-     */
     private void enviar(Mensaje msg) throws IOException 
     {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -181,9 +145,6 @@ public class ClienteUDP
         socket.send(paquete);
     }
     
-    /**
-     * Recibe un mensaje del servidor
-     */
     private Mensaje recibir() throws IOException, ClassNotFoundException 
     {
         byte[] buffer = new byte[2048];
@@ -198,9 +159,11 @@ public class ClienteUDP
         return msg;
     }
     
-    /**
-     * Cierra el cliente
-     */
+    public void setMiClase(String clase) 
+    {
+        this.mi_clase = clase;
+    }
+    
     public void cerrar() 
     {
         socket.close();
