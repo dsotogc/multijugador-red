@@ -75,6 +75,13 @@ public class ClienteUDP
         enviar(msg);
     }
     
+    public void enviarMensajeChat(String mensaje) throws IOException 
+    {
+        String datos = mi_numero + "|" + mi_clase + "|" + mensaje;
+        Mensaje msg = new Mensaje(TipoMensaje.MENSAJE_CHAT, datos);
+        enviar(msg);
+    }
+    
     private void procesarMensaje(Mensaje msg) 
     {
         switch (msg.getTipo()) 
@@ -106,6 +113,14 @@ public class ClienteUDP
                 
             case TURNO:
                 ventana.getPanelCombate().activarTurno();
+                break;
+                
+            case CHAT_GLOBAL:
+                String[] datos_chat = msg.getDatos().split("\\|", 3);
+                int num_jugador = Integer.parseInt(datos_chat[0]);
+                String clase = datos_chat[1];
+                String mensaje = datos_chat[2];
+                ventana.getPanelCombate().agregarMensajeChat(num_jugador, clase, mensaje);
                 break;
                 
             case FIN_PARTIDA:

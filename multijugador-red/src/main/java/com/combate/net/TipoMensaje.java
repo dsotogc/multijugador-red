@@ -26,6 +26,7 @@ public enum TipoMensaje
     CONEXION,
     SELECCION_CLASE,
     ACCION,
+	MENSAJE_CHAT,
     
     // Mensajes Servidor - Cliente
     CONFIRMACION_CONEXION,
@@ -35,5 +36,6 @@ public enum TipoMensaje
     ESTADO_PARTIDA,
     TURNO,
     FIN_PARTIDA,
-    ERROR
+    ERROR,
+	CHAT_GLOBAL
 }
