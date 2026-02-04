@@ -7,7 +7,7 @@ import java.awt.event.*;
 import com.combate.client.ClienteUDP;
 
 /**
- * Panel de combate con chat que identifica equipo y clase con colores.
+ * Panel de combate con validación de objetivos muertos y estilos mejorados.
  * 
  * @author David Soto García
  */
@@ -22,6 +22,7 @@ public class PanelCombate extends JPanel {
 	private JProgressBar[] barras_vida = new JProgressBar[4];
 	private JLabel[] labels_jugadores = new JLabel[4];
 	private JButton[] botones_objetivo = new JButton[4];
+	private boolean[] jugadores_vivos = new boolean[] { true, true, true, true };
 
 	private JButton btn_accion1;
 	private JButton btn_accion2;
@@ -244,6 +245,8 @@ public class PanelCombate extends JPanel {
 		btn_accion2.setEnabled(false);
 		btn_accion3.setEnabled(false);
 
+		actualizarEstiloBotonesAccion();
+
 		panel_habilidades.revalidate();
 		panel_habilidades.repaint();
 	}
@@ -268,6 +271,19 @@ public class PanelCombate extends JPanel {
 		boton.add(lbl_desc, BorderLayout.CENTER);
 
 		return boton;
+	}
+
+	private void actualizarEstiloBotonesAccion() {
+		if (btn_accion1 == null)
+			return;
+
+		Color color_deshabilitado = new Color(100, 100, 110);
+
+		if (!btn_accion1.isEnabled()) {
+			btn_accion1.setBackground(color_deshabilitado);
+			btn_accion2.setBackground(color_deshabilitado);
+			btn_accion3.setBackground(color_deshabilitado);
+		}
 	}
 
 	private JPanel crearPanelEquipo(String nombre, int idx1, int idx2, Color color) {
@@ -329,6 +345,7 @@ public class PanelCombate extends JPanel {
 		btn_accion1.setEnabled(false);
 		btn_accion2.setEnabled(false);
 		btn_accion3.setEnabled(false);
+		actualizarEstiloBotonesAccion();
 
 		es_ataque_area = (mi_clase.equals("Mago") && accion == 3);
 
@@ -372,25 +389,40 @@ public class PanelCombate extends JPanel {
 
 		if (mi_clase.equals("Luchador")) {
 			if (accion == 1 || accion == 3) {
-				return new int[] { enemigo1, enemigo2 };
+				return filtrarObjetivosVivos(new int[] { enemigo1, enemigo2 });
 			} else if (accion == 2) {
 				return new int[] { mi_numero };
 			}
 		} else if (mi_clase.equals("Mago")) {
 			if (accion == 1 || accion == 2) {
-				return new int[] { enemigo1, enemigo2 };
+				return filtrarObjetivosVivos(new int[] { enemigo1, enemigo2 });
 			}
 		} else if (mi_clase.equals("Curandero")) {
 			if (accion == 1) {
-				return new int[] { enemigo1, enemigo2 };
+				return filtrarObjetivosVivos(new int[] { enemigo1, enemigo2 });
 			} else if (accion == 2) {
-				return new int[] { mi_numero, compañero };
+				return filtrarObjetivosVivos(new int[] { mi_numero, compañero });
 			} else if (accion == 3) {
 				return new int[] { compañero };
 			}
 		}
 
 		return new int[] {};
+	}
+
+	private int[] filtrarObjetivosVivos(int[] objetivos) {
+		java.util.ArrayList<Integer> vivos = new java.util.ArrayList<>();
+		for (int obj : objetivos) {
+			if (jugadores_vivos[obj]) {
+				vivos.add(obj);
+			}
+		}
+
+		int[] resultado = new int[vivos.size()];
+		for (int i = 0; i < vivos.size(); i++) {
+			resultado[i] = vivos.get(i);
+		}
+		return resultado;
 	}
 
 	private void seleccionarObjetivo(int objetivo) {
@@ -411,9 +443,26 @@ public class PanelCombate extends JPanel {
 	public void activarTurno() {
 		SwingUtilities.invokeLater(() -> {
 			lbl_turno.setText("*** ES TU TURNO ***");
-			btn_accion1.setEnabled(true);
-			btn_accion2.setEnabled(true);
-			btn_accion3.setEnabled(true);
+
+			if (jugadores_vivos[mi_numero]) {
+				btn_accion1.setEnabled(true);
+				btn_accion2.setEnabled(true);
+				btn_accion3.setEnabled(true);
+
+				if (mi_clase.equals("Luchador")) {
+					btn_accion1.setBackground(new Color(180, 60, 60));
+					btn_accion2.setBackground(new Color(100, 100, 180));
+					btn_accion3.setBackground(new Color(200, 100, 0));
+				} else if (mi_clase.equals("Mago")) {
+					btn_accion1.setBackground(new Color(100, 120, 200));
+					btn_accion2.setBackground(new Color(150, 50, 150));
+					btn_accion3.setBackground(new Color(200, 100, 0));
+				} else if (mi_clase.equals("Curandero")) {
+					btn_accion1.setBackground(new Color(100, 180, 120));
+					btn_accion2.setBackground(new Color(50, 200, 100));
+					btn_accion3.setBackground(new Color(100, 250, 150));
+				}
+			}
 		});
 	}
 
@@ -424,6 +473,7 @@ public class PanelCombate extends JPanel {
 				btn_accion1.setEnabled(false);
 				btn_accion2.setEnabled(false);
 				btn_accion3.setEnabled(false);
+				actualizarEstiloBotonesAccion();
 			}
 		});
 	}
@@ -432,6 +482,8 @@ public class PanelCombate extends JPanel {
 		SwingUtilities.invokeLater(() -> {
 			barras_vida[indice].setValue(vida);
 			barras_vida[indice].setString(vida + " HP");
+
+			jugadores_vivos[indice] = (vida > 0);
 
 			if (vida > 50) {
 				barras_vida[indice].setForeground(new Color(50, 200, 50));
@@ -442,6 +494,13 @@ public class PanelCombate extends JPanel {
 			} else {
 				barras_vida[indice].setForeground(Color.GRAY);
 				labels_jugadores[indice].setText("Jugador " + indice + " (MUERTO)");
+
+				if (indice == mi_numero) {
+					btn_accion1.setEnabled(false);
+					btn_accion2.setEnabled(false);
+					btn_accion3.setEnabled(false);
+					actualizarEstiloBotonesAccion();
+				}
 			}
 		});
 	}
@@ -452,6 +511,7 @@ public class PanelCombate extends JPanel {
 			btn_accion1.setEnabled(false);
 			btn_accion2.setEnabled(false);
 			btn_accion3.setEnabled(false);
+			actualizarEstiloBotonesAccion();
 			txt_mensaje.setEnabled(false);
 			btn_enviar.setEnabled(false);
 		});
