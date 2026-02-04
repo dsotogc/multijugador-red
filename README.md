@@ -6,6 +6,54 @@ El sistema implementa un combate por turnos 2 contra 2 que sirve como contexto p
 
 ---
 
+
+## If you don’t have Maven (Maven Wrapper)
+
+El repositorio incluye **Maven Wrapper**, así que no necesitas tener Maven instalado. Solo necesitas **Java 21**.
+
+> Importante: los comandos se ejecutan dentro de la carpeta del proyecto Maven: `multijugador-red/`.
+
+### Windows (PowerShell / CMD)
+
+```bash
+cd multijugador-red
+.\mvnw.cmd clean compile
+```
+
+Ejecutar servidor:
+
+```bash
+.\mvnw.cmd exec:java -Dexec.mainClass="com.combate.server.ServidorUDP"
+```
+
+Ejecutar cliente (x4 terminales):
+
+```bash
+.\mvnw.cmd exec:java -Dexec.mainClass="com.combate.client.ClienteUDP"
+```
+
+### Linux / macOS
+
+```bash
+cd multijugador-red
+chmod +x mvnw
+./mvnw clean compile
+```
+
+Ejecutar servidor:
+
+```bash
+./mvnw exec:java -Dexec.mainClass="com.combate.server.ServidorUDP"
+```
+
+Ejecutar cliente (x4 terminales):
+
+```bash
+./mvnw exec:java -Dexec.mainClass="com.combate.client.ClienteUDP"
+```
+
+---
+
 ## Table of Contents
 
 - [About](#about)
@@ -241,20 +289,23 @@ Designed for localhost or controlled network environments.
 ## Project Structure
 
 ```
-src/main/java/com/combate/
+multijugador-red/
 │
-├── server/
-│   └── ServidorUDP.java
-│
-├── client/
-│   └── ClienteUDP.java
-│
-├── net/
-│   ├── Mensaje.java
-│   └── TipoMensaje.java
-│
-└── model/
-    └── Partida.java
+├── README.md
+├── .gitignore
+└── multijugador-red/                # Proyecto Maven (código)
+    ├── mvnw / mvnw.cmd              # Maven Wrapper
+    ├── pom.xml
+    └── src/
+        └── main/
+            └── java/
+                └── com/combate/
+                    ├── server/
+                    ├── client/
+                    ├── net/
+                    ├── model/
+                    └── view/
+
 ```
 
 ---
