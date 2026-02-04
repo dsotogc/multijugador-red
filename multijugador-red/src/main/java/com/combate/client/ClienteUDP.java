@@ -7,7 +7,9 @@ import com.combate.net.TipoMensaje;
 import com.combate.view.VentanaJuego;
 
 /**
- * Cliente UDP con interfaz gráfica para el juego de combate por turnos.
+ * Cliente UDP para el juego.
+ * Gestiona la conexión con el servidor, el envío y recepción de mensajes,
+ * y la actualización de la interfaz gráfica en tiempo real.
  * 
  * @author David Soto García
  */
@@ -24,6 +26,12 @@ public class ClienteUDP
     private VentanaJuego ventana;
     private Thread hilo_receptor;
     
+    /**
+     * Inicializa el socket, la ventana gráfica y el hilo receptor de mensajes.
+     * 
+     * @throws SocketException Si no se puede crear el socket UDP
+     * @throws UnknownHostException Si no se puede resolver localhost
+     */
     public ClienteUDP() throws SocketException, UnknownHostException 
     {
         socket = new DatagramSocket();
@@ -34,6 +42,10 @@ public class ClienteUDP
         iniciarHiloReceptor();
     }
     
+    /**
+     * Inicia un hilo secundario que escucha continuamente mensajes del servidor.
+     * Este hilo se ejecuta en paralelo al hilo principal de la interfaz gráfica.
+     */
     private void iniciarHiloReceptor() 
     {
         hilo_receptor = new Thread(() -> {
@@ -56,18 +68,37 @@ public class ClienteUDP
         hilo_receptor.start();
     }
     
+    /**
+     * Envía un mensaje de conexión inicial al servidor.
+     * 
+     * @throws IOException Si ocurre un error al enviar el mensaje
+     */
     public void conectar() throws IOException 
     {
         Mensaje msg = new Mensaje(TipoMensaje.CONEXION);
         enviar(msg);
     }
     
+    /**
+     * Envía al servidor la clase de personaje seleccionada.
+     * 
+     * @param clase Nombre de la clase ("Luchador", "Mago" o "Curandero")
+     * @throws IOException Si ocurre un error al enviar el mensaje
+     */
     public void enviarClase(String clase) throws IOException 
     {
         Mensaje msg = new Mensaje(TipoMensaje.SELECCION_CLASE, clase);
         enviar(msg);
     }
     
+    /**
+     * Envía una acción de combate al servidor.
+     * 
+     * @param accion Número de acción (1, 2 o 3)
+     * @param obj1 Índice del primer objetivo (0-3)
+     * @param obj2 Índice del segundo objetivo (0-3) o -1 si no se usa
+     * @throws IOException Si ocurre un error al enviar el mensaje
+     */
     public void enviarAccion(int accion, int obj1, int obj2) throws IOException 
     {
         String datos = accion + "|" + obj1 + "|" + obj2;
@@ -75,6 +106,12 @@ public class ClienteUDP
         enviar(msg);
     }
     
+    /**
+     * Envía un mensaje de chat global a todos los jugadores.
+     * 
+     * @param mensaje Texto del mensaje a enviar
+     * @throws IOException Si ocurre un error al enviar el mensaje
+     */
     public void enviarMensajeChat(String mensaje) throws IOException 
     {
         String datos = mi_numero + "|" + mi_clase + "|" + mensaje;
@@ -82,6 +119,11 @@ public class ClienteUDP
         enviar(msg);
     }
     
+    /**
+     * Procesa los mensajes recibidos del servidor y actualiza la interfaz gráfica.
+     * 
+     * @param msg Mensaje recibido del servidor
+     */
     private void procesarMensaje(Mensaje msg) 
     {
         switch (msg.getTipo()) 
@@ -148,6 +190,12 @@ public class ClienteUDP
         }
     }
     
+    /**
+     * Actualiza el estado de la partida (vida de jugadores y turno actual).
+     * Formato esperado: "vida0|vida1|vida2|vida3|turno|estado"
+     * 
+     * @param datos String con el estado actualizado de la partida
+     */
     private void actualizarEstado(String datos) 
     {
         String[] partes = datos.split("\\|");
@@ -162,6 +210,12 @@ public class ClienteUDP
         ventana.getPanelCombate().actualizarTurno(turno);
     }
     
+    /**
+     * Serializa y envía un mensaje al servidor mediante UDP.
+     * 
+     * @param msg Mensaje a enviar
+     * @throws IOException Si ocurre un error al enviar el paquete
+     */
     private void enviar(Mensaje msg) throws IOException 
     {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -174,6 +228,13 @@ public class ClienteUDP
         socket.send(paquete);
     }
     
+    /**
+     * Recibe y deserializa un mensaje del servidor.
+     * 
+     * @return Mensaje recibido del servidor
+     * @throws IOException Si ocurre un error al recibir el paquete
+     * @throws ClassNotFoundException Si no se puede deserializar el objeto
+     */
     private Mensaje recibir() throws IOException, ClassNotFoundException 
     {
         byte[] buffer = new byte[2048];
@@ -188,16 +249,30 @@ public class ClienteUDP
         return msg;
     }
     
+    /**
+     * Establece la clase del jugador actual.
+     * 
+     * @param clase Nombre de la clase seleccionada
+     */
     public void setMiClase(String clase) 
     {
         this.mi_clase = clase;
     }
     
+    /**
+     * Cierra el socket UDP y finaliza la conexión.
+     */
     public void cerrar() 
     {
         socket.close();
     }
     
+    /**
+     * Punto de entrada de la aplicación cliente.
+     * Crea una instancia del cliente y se conecta al servidor.
+     * 
+     * @param args Argumentos de línea de comandos (no utilizados)
+     */
     public static void main(String[] args) 
     {
         try 
