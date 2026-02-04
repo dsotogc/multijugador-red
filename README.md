@@ -264,4 +264,4 @@ src/main/java/com/combate/
 **David Soto García**
 
 - GitHub: [@dsotogc](https://github.com/dsotogc)
-- Project Link: [https://github.com/dsotogc/game-of-life](https://https://github.com/dsotogc/multijugador-red)
+- Project Link: [https://github.com/dsotogc/multijugador-red](https://https://github.com/dsotogc/multijugador-red)
